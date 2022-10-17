@@ -1,7 +1,10 @@
+from math import degrees
 import networkx as nx
 import matplotlib
 import numpy as np
 import random
+
+from scipy.fft import dst
 from plots import draw_graph
 
 matplotlib.use('TkAgg')
@@ -54,19 +57,22 @@ def node_degree_distribution(G):
     plt.savefig("node_degree_distribution.png")
 
 # 2.average shortest path-length
-def average_shortest_path_length(G):
-    adj_mat = np.array(nx.adjacency_matrix(G).todense())
+def average_shortest_path_length(G: nx.Graph):
+    dist = np.array(nx.adjacency_matrix(G).todense(), dtype=float)
     for i in range(G.number_of_nodes()):
         for j in range(G.number_of_nodes()):
-            if i != j and adj_mat[i][j] == 0:
-                adj_mat[i][j] = INF
-    dist = list(map(lambda p: list(map(lambda q: q, p)), adj_mat.tolist()))
+            if i != j and dist[i][j] == 0:
+                dist[i][j] = np.inf
+    # dist = list(map(lambda p: list(map(lambda q: q, p)), adj_mat.tolist()))
+    # print(dist)
     # Adding vertices individually
     for r in range(G.number_of_nodes()):
         for p in range(G.number_of_nodes()):
             for q in range(G.number_of_nodes()):
                 dist[p][q] = min(dist[p][q], dist[p][r] + dist[r][q])
-    result = np.sum(np.array(dist)) / (G.number_of_nodes() * G.number_of_nodes() - G.number_of_nodes())
+    sum_path = np.sum(np.where(dist < np.inf, dist, 0))
+    n_path = np.sum(np.where(dist < np.inf, 1, 0)) - G.number_of_nodes()
+    result = sum_path / n_path
     return result
 
 # 3.clustering coefficient
@@ -90,17 +96,17 @@ def clustering_coefficient(G: nx.Graph):
     return cc/G.number_of_nodes()
 
 # 4.graph coreness
-def graph_coreness(G):
-    H = G.copy()
+def graph_coreness(G: nx.Graph):
+    degrees = dict(G.degree())
+    node_list = list(G.nodes())
     for i in range(G.number_of_nodes()):
-        node_list = list(H.nodes)
+        H = G.copy()
         for node in node_list:
-            if H.degree[node] <= i:
+            if degrees[node] <= i:
                 H.remove_node(node)
-        node_list = list(H.nodes)
         for node in node_list:
-            if H.degree[node] <= i:
-                H.remove_node(node)
+            if degrees[node] <= i and node in H.nodes():
+                    H.remove_node(node)
         if nx.is_empty(H):
             break
     return i
@@ -108,16 +114,16 @@ def graph_coreness(G):
 
 # 5.node coreness
 def node_coreness(G, node_i):
-    H = G.copy()
+    degrees = dict(G.degree())
+    node_list = list(G.nodes())
     for i in range(G.number_of_nodes()):
-        node_list = list(H.nodes)
+        H = G.copy()
         for node in node_list:
-            if H.degree[node] <= i:
+            if degrees[node] <= i:
                 H.remove_node(node)
-        node_list = list(H.nodes)
         for node in node_list:
-            if H.degree[node] <= i:
-                H.remove_node(node)
+            if degrees[node] <= i and node in H.nodes():
+                    H.remove_node(node)
         node_list = list(H.nodes)
         if node_i not in node_list:
             break
@@ -130,19 +136,25 @@ def intention_attack(G: nx.Graph, n_attacks=3):
     # we assume each time attack the nodes which has the largest degree
     node_degrees = sorted(list(G.degree()), key=lambda x: -x[1])
     avg_shortest_paths, clustering_coeffs, g_coreness = [], [], []
+    avg_shortest_paths.append(average_shortest_path_length(G))
+    clustering_coeffs.append(clustering_coefficient(G))
+    g_coreness.append(graph_coreness(G))
     for i in range(n_attacks):
-        node_id, _ = node_degrees[n_node - i - 1]
+        node_id, _ = node_degrees[i]
         G.remove_node(node_id)
         avg_shortest_paths.append(average_shortest_path_length(G))
         clustering_coeffs.append(clustering_coefficient(G))
         g_coreness.append(graph_coreness(G))
-    draw_attack("intention_attack", n_attacks, avg_shortest_paths, clustering_coeffs, g_coreness)
+    draw_attack("intention attack", n_attacks, avg_shortest_paths, clustering_coeffs, g_coreness)
 
 # 7.random attack
 def random_attack(G: nx.Graph, n_attacks=3):
     # we assume each time attack the nodes which has the largest degree
     avg_shortest_paths, clustering_coeffs, g_coreness = [], [], []
     node_degrees = list(G.degree())
+    avg_shortest_paths.append(average_shortest_path_length(G))
+    clustering_coeffs.append(clustering_coefficient(G))
+    g_coreness.append(graph_coreness(G))
     for i in range(n_attacks):
         index = random.randrange(len(node_degrees))
         node_id, _ = node_degrees.pop(index)
@@ -151,26 +163,27 @@ def random_attack(G: nx.Graph, n_attacks=3):
         clustering_coeffs.append(clustering_coefficient(G))
         g_coreness.append(graph_coreness(G))
 
-    draw_attack("random_attack", n_attacks, avg_shortest_paths, clustering_coeffs, g_coreness)
+    draw_attack("random attack", n_attacks, avg_shortest_paths, clustering_coeffs, g_coreness)
 
 
 def draw_attack(mode, n_attacks, avg_shortest_paths, clustering_coeffs, g_coreness):
+    plt.figure()
     plt.subplot(2, 2, 1)
-    plt.plot(np.arange(n_attacks), avg_shortest_paths, color = "red") 
+    plt.plot(np.arange(n_attacks + 1), avg_shortest_paths, color = "red") 
     plt.xticks([i for i in range(n_attacks)])   
     plt.grid()
     plt.xlabel("attack times")
     plt.title("average shortest path length")
 
     plt.subplot(2, 2, 2)
-    plt.plot(np.arange(n_attacks), clustering_coeffs, color = "yellow")       
+    plt.plot(np.arange(n_attacks + 1), clustering_coeffs, color = "yellow")       
     plt.xticks([i for i in range(n_attacks)])   
     plt.grid()
     plt.xlabel("attack times")
     plt.title("clustering coefficient")
 
     plt.subplot(2, 2, 3)
-    plt.plot(np.arange(n_attacks), g_coreness, color = "blue")
+    plt.plot(np.arange(n_attacks + 1), g_coreness, color = "blue")
     plt.xticks([i for i in range(n_attacks)])   
     plt.grid()
     plt.xlabel("attack times")
@@ -188,8 +201,8 @@ if __name__ == '__main__':
     G = nx.Graph()
     creat_graph(G, edges)
     draw_graph(G)
-    # node_degree_distribution(G)
     # print(average_shortest_path_length(G))
+    # node_degree_distribution(G)
     # print(clustering_coefficient(G))
     # print(graph_coreness(G))
     # print(node_coreness(G, 8))

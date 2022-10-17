@@ -8,25 +8,19 @@ LastEditTime: 2022-04-25 15:13:26
 '''
 import numpy as np
 import matplotlib.pyplot as plt
-import os
 import networkx as nx
 import numpy as np
 # Standard Library
 import random
 from collections import defaultdict
 from copy import copy
-import os
 
 # Third Party
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from matplotlib.path import Path
-from matplotlib.patches import PathPatch
 from matplotlib import cm
 from scipy.interpolate import splprep, splev
-from scipy.spatial import ConvexHull
-import pandas as pd
 
 
 def _inter_community_edges(G, partition):
