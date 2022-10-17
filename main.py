@@ -51,10 +51,18 @@ def node_degree_distribution(G):
     plt.figure()
     for i in range(len(x_data)):
         plt.bar(x_data[i], y_data[i])
+    #plt.plot(x_data, y_data[: max_degree])
     plt.title("node-degree distribution")
     plt.xlabel("degree")
     plt.ylabel("num of nodes")
     plt.savefig("node_degree_distribution.png")
+
+    plt.figure()
+    plt.plot(x_data[2:], y_data[2: max_degree])
+    plt.title("node-degree distribution")
+    plt.xlabel("degree")
+    plt.ylabel("num of nodes")
+    plt.savefig("node_degree_distribution_fit.png")
 
 # 2.average shortest path-length
 def average_shortest_path_length(G: nx.Graph):
@@ -202,10 +210,10 @@ if __name__ == '__main__':
     creat_graph(G, edges)
     draw_graph(G)
     # print(average_shortest_path_length(G))
-    # node_degree_distribution(G)
+    node_degree_distribution(G)
     # print(clustering_coefficient(G))
     # print(graph_coreness(G))
     # print(node_coreness(G, 8))
-    intention_attack(G, n_attacks=10)
-    random_attack(G, n_attacks=10)
+    #intention_attack(G, n_attacks=10)
+    #random_attack(G, n_attacks=10)
 
