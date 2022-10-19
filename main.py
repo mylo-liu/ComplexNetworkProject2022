@@ -210,10 +210,10 @@ if __name__ == '__main__':
     creat_graph(G, edges)
     draw_graph(G)
     # print(average_shortest_path_length(G))
-    node_degree_distribution(G)
+    # node_degree_distribution(G)
     # print(clustering_coefficient(G))
     # print(graph_coreness(G))
     # print(node_coreness(G, 8))
-    #intention_attack(G, n_attacks=10)
-    #random_attack(G, n_attacks=10)
+    intention_attack(G, n_attacks=10)
+    random_attack(G, n_attacks=10)
 
