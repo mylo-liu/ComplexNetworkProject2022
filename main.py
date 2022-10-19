@@ -51,10 +51,18 @@ def node_degree_distribution(G):
     plt.figure()
     for i in range(len(x_data)):
         plt.bar(x_data[i], y_data[i])
+    #plt.plot(x_data, y_data[: max_degree])
     plt.title("node-degree distribution")
     plt.xlabel("degree")
     plt.ylabel("num of nodes")
     plt.savefig("node_degree_distribution.png")
+
+    plt.figure()
+    plt.plot(x_data[2:], y_data[2: max_degree])
+    plt.title("node-degree distribution")
+    plt.xlabel("degree")
+    plt.ylabel("num of nodes")
+    plt.savefig("node_degree_distribution_fit.png")
 
 # 2.average shortest path-length
 def average_shortest_path_length(G: nx.Graph):
